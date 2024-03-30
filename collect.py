@@ -1,9 +1,12 @@
 # residentevildatabase
+# kernel vs code é o problema, devo rever o kernel para o conda. Estou tendo que dar pip install 2x
 # %%
 print("Hello")
 # %%
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
+import pandas as pd
 
 headers = {
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -31,8 +34,7 @@ def get_basic_infos(soup):
     ems= paragrafo.find_all("em")
     data = {}
     for i in ems:
-        print (i)
-        chave, valor = i.text.split(":")
+        chave, valor , *_ = i.text.split(":")
         chave = chave.strip(" ")
         data[chave] = valor.strip(" ")
     return data
@@ -62,7 +64,7 @@ def get_links():
     resp =  requests.get(url, headers=headers)
     soup_personagens = BeautifulSoup(resp.text)
     ancoras = (soup_personagens.find("div", class_="td-page-content")
-                    .find_all("a"))
+                               .find_all("a"))
 
     links =[i["href"] for i in ancoras]
     return links
@@ -70,11 +72,28 @@ def get_links():
 # %%
 links = get_links()
 data =[]
-for i in links:
-    print(i)
+for i in tqdm(links):
     d = get_personagem_infos(i)
     d["link"] = i
+    nome= i.strip("/").split("/")[-1].replace("-", " ").title()
+    d["Nome"] = nome
     data.append(d)
 # %%
 data
+# %%
+df = pd.DataFrame(data)
+df
+# %%
+df[~df["de nascimento"].isna()]
+# %%
+# df.to_csv("dados_Re.csv",index=False, sep=";")
+# %%
+df.to_parquet("Dados_re.parquet", index=False)
+# %%
+df_new = pd.read_parquet("Dados_re.parquet")
+df_new
+# %%
+df.to_pickle("dados_Re.pkl")
+# %%
+type(df)
 # %%
