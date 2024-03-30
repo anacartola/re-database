@@ -95,5 +95,3 @@ df_new
 # %%
 df.to_pickle("dados_Re.pkl")
 # %%
-type(df)
-# %%
